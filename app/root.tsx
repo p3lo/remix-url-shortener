@@ -1,7 +1,6 @@
 import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration, useCatch } from 'remix';
 import type { MetaFunction } from 'remix';
 import styles from './tailwind.css';
-import { useRef, useState } from 'react';
 
 export const meta: MetaFunction = () => {
   return { title: 'New Remix App' };
