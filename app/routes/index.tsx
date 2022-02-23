@@ -1,6 +1,7 @@
 import { ActionFunction, Form, useActionData } from 'remix';
 import ShortUniqueId from 'short-unique-id';
 import { DuplicateIcon } from '@heroicons/react/outline';
+import { db } from '~/utils/db.server';
 
 function isValidHttpUrl(string: string) {
   let url;
@@ -20,29 +21,38 @@ export const action: ActionFunction = async ({ request }) => {
   if (!url) return null;
   if (!isValidHttpUrl(url.toString())) return { message: 'Is not valid url' };
   const uid = new ShortUniqueId({ length: 10 });
-  return { short_url: `http://localhost:3000/${uid()}` };
+  const generated_uid = uid();
+  await db.url.create({
+    data: {
+      orig_url: url.toString(),
+      short_url: generated_uid,
+    },
+  });
+  return { short_url: generated_uid };
 };
 
 export default function Index() {
   const data = useActionData();
   return (
-    <div className="flex flex-col h-full  items-center">
-      <h1 className="p-3 text-4xl pt-10 font-extrabold">Url Shortener</h1>
-      <Form method="post" className=" pt-10 w-1/3">
+    <div className="flex flex-col items-center h-full">
+      <h1 className="p-3 pt-10 text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-blue-500">
+        Url Shortener
+      </h1>
+      <Form method="post" className="w-1/3 pt-10 ">
         <label className="label" htmlFor="url">
           <span className="label-text">Url to shorten</span>
         </label>
-        <input className="input input-bordered w-full" type="text" name="url" id="url" spellCheck={false} />
+        <input className="w-full input input-bordered" type="text" name="url" id="url" spellCheck={false} />
       </Form>
       {data?.short_url && (
-        <div className="mt-5 py-3 px-5 border rounded-xl bg-gray-800 flex space-x-2 items-center border-gray-500">
-          <a className="hover:text-blue-500" href={data.short_url}>
-            {data.short_url}
+        <div className="flex items-center px-5 py-3 mt-5 space-x-2 bg-gray-800 border border-gray-500 rounded-xl">
+          <a className="hover:text-blue-500" href={`${window.location.origin}/${data.short_url}`}>
+            {`${window.location.origin}/${data.short_url}`}
           </a>
           <DuplicateIcon
-            className="h-6 w-6 cursor-pointer"
+            className="w-6 h-6 cursor-pointer"
             onClick={() => {
-              navigator.clipboard.writeText(data.short_url);
+              navigator.clipboard.writeText(`${window.location.origin}/${data.short_url}`);
             }}
           />
         </div>
